@@ -1,0 +1,20 @@
+# Language we'll be using
+language: python
+python:
+  - "3.6"
+
+# Tell Travis what services we'll use
+services:
+  # Just need Docker service. All the sub-services are contained
+  # in our docker-compose file and Dockerfile configuration
+  - docker
+
+# Specify a "before" script that TCI will run before it executes
+# any of the automation commands that we input next. In our case,
+# we need it to install docker-compose before anything
+before_script: pip install docker-compose
+
+# Specify the script
+script:
+  # Run docker-compose command for running our tests and our linting tool
+  - docker-compose run app sh -c "python manage.py test && flake8"
