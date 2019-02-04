@@ -22,4 +22,27 @@ services:
     # container. Will run on port 8000, which is mapped to "ports" configuration to our 
     # local machine. We can now run our app and connect to it on port 8000 on local machine
     command: >
-      sh -c "python manage.py runserver 0.0.0.0:8000"
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    # Set environment variables and depends_on on new db service
+    environment: 
+      - DB_HOST=db
+      - DB_NAME=app
+      - DB_USER=postgres
+      - DB_PASS=supersecretpassword
+    # Set our app service to depend on db service. db service will start before app.
+    # And now db service available via network when use hostname=db
+    depends_on: 
+      - db
+
+
+  db: 
+    # locate the postgres image on DockerHub and pulls down version with tag "11-alpine"
+    # NOTE: Instructor ran with "10-alpine" but latest was "11-alpine" so I tried it.
+    image: postgres:11-alpine
+    # Set some environment variables
+    environment: 
+      - POSTGRES_DB=app
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=supersecretpassword

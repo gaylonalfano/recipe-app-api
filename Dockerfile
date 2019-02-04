@@ -11,13 +11,22 @@ ENV PYTHONUNBUFFERED 1
 
 # -- Store our dependencies in a requirements.txt file and copy to docker image
 COPY ./requirements.txt /requirements.txt
+# Encountered a WARNING after building. Need to add this line before postgresql
+RUN apk update
+# Add dependencies so we can install the psycopg2 package for Django/Postgres
+RUN apk add --update --no-cache postgresql-client
+# Add temp packages needed to install requirements. Assigning alias
+RUN apk add --update --no-cache --virtual .tmp-build-deps \
+  gcc libc-dev linux-headers postgresql-dev
 # -- Installs our requirements into the Docker image
 RUN pip install -r /requirements.txt
+# Delete the temporary dependencies we just added
+RUN apk del .tmp-build-deps
 
 # -- Make a directory inside our image to store our application's source code
 RUN mkdir /app
 # -- Switch to this new directory (like cd basically) and set as default
-# Any application we run from the Docker container will start/run from this directory
+# Any application we run from the Docker container will run from this directory
 WORKDIR /app
 # -- Copies from local machine /app folder to the /app folder on our image. 
 # This allows us to copy our code we create and copy to our Docker image.
