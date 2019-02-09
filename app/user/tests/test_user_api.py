@@ -18,7 +18,7 @@ from rest_framework import status
 CREATE_USER_URL = reverse('user:create')
 # URL we use to make HTTP POST request to generate token
 TOKEN_URL = reverse('user:token')
-# URL we're going to use for update user endpoint '/user/me/'
+# URL we're going to use for update user endpoint '/user/me/' API
 ME_URL = reverse('user:me')
 
 
