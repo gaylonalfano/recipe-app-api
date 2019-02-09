@@ -22,7 +22,7 @@ TOKEN_URL = reverse('user:token')
 ME_URL = reverse('user:me')
 
 
-# Helper function for creating a new user since we do it multiple times
+# Helper function for creating a new user since we will do it multiple times
 def create_user(**params):
     return get_user_model().objects.create_user(**params)
 
