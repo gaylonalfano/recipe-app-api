@@ -29,6 +29,23 @@ class UserSerializer(serializers.ModelSerializer):
         # to unwind validated_data into the params of create_user()
         return get_user_model().objects.create_user(**validated_data)
 
+    def update(self, instance, validated_data):
+        """Update a user, setting the password correctly and return it"""
+        # Purpose of this is to ensure password is set using set_password()
+        # Instance is the model instance linked to ModelSerializer (user)
+        # Validated_data are the fields we defined in Meta
+        # Let's first remove the password from validated_data
+        password = validated_data.pop('password', None)
+        # Call default update() w/ super() inside custom update()
+        user = super().update(instance, validated_data)
+
+        # Set password if user provides one
+        if password:
+            user.set_password(password)
+            user.save()
+
+        return user
+
 
 # Create new serializer based on standard serializers module for auth requests
 class AuthTokenSerializer(serializers.Serializer):
@@ -38,6 +55,7 @@ class AuthTokenSerializer(serializers.Serializer):
         style={'input_type': 'password'},
         trim_whitespace=False
     )
+
     # Check that inputs are correct by using standard validate()
     def validate(self, attrs):
         """Validate and authenticate the user"""

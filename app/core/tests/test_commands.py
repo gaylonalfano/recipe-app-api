@@ -23,7 +23,7 @@ class CommandTests(TestCase):
     def test_wait_for_db(self, ts):
         """Test waiting for db"""
         with patch('django.db.utils.ConnectionHandler.__getitem__') as gi:
-            # Add a side effect to mock __getitem__ failing 5 times then executing
+            # Add side_effect to mock __getitem__ failing 5 times then execute
             gi.side_effect = [OperationalError] * 5 + [True]
             # Call our command
             call_command('wait_for_db')

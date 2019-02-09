@@ -1,6 +1,6 @@
 # app/user/views.py
-# Import CreateAPIView
-from rest_framework import generics
+# Import CreateAPIView, authentication and permissions for user endpoint
+from rest_framework import generics, authentication, permissions
 # Import ObtainAuthToken view since we need to customize it since no username
 from rest_framework.authtoken.views import ObtainAuthToken
 # Import our API settings
@@ -19,8 +19,25 @@ class CreateUserView(generics.CreateAPIView):
     # serializer we want to use to create the object. That's it!
     serializer_class = UserSerializer
 
+
 class CreateTokenView(ObtainAuthToken):
     """Create a new auth token for user"""
     serializer_class = AuthTokenSerializer
     # Use default renderer classes so we have a browsable API
     renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES
+
+
+class ManageUserView(generics.RetrieveUpdateAPIView):
+    """Manage the authenticated user"""
+    serializer_class = UserSerializer
+
+    # Add class vars for authentication and permission
+    authentication_classes = (authentication.TokenAuthentication,)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    # Add a get_object() function to just return the user that's authenticated
+    # Typically you'd link view to a model and retrieve the item and db models
+    def get_object(self):
+        """Retrieve and return authenticated user"""
+        # Great feature of DRF! Read notes!
+        return self.request.user
