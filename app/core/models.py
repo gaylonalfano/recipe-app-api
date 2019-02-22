@@ -3,6 +3,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
     PermissionsMixin
 
+# Best practice to retrieve AuthUser model is from Django settings
+from django.conf import settings
+
 
 class UserManager(BaseUserManager):
 
@@ -43,3 +46,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'  # default is 'username'
+
+
+class Tag(models.Model):
+    """Tag to be used for a recipe"""
+    name = models.CharField(max_length=255)
+    # Assign user Foreign Key to our User object using Django settings
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+
+    # Set str representation for model
+    def __str__(self):
+        return self.name

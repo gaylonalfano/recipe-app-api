@@ -1,10 +1,10 @@
 # -- Image you are going to inherit
 FROM python:3.7-alpine
 # (optional) Who's maintaining the project
-MAINTAINER Gaylon Alfano
+LABEL maintainer="Gaylon Alfano"
 
 # Set the Python unbuffered environment variable
-# Recommended when running Pythin within Docker containers
+# Recommended when running Python within Docker containers
 # It doesn't allow Python to buffer the outputs. Just prints directly.
 # This avoids complications with Docker image when running your Python app.
 ENV PYTHONUNBUFFERED 1
