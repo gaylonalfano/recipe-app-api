@@ -85,6 +85,27 @@ class PrivateIngredientsApiTests(TestCase):
         # Assert that data matches is specific to auth user
         self.assertEqual(res.data, serializer.data)
 
+    def test_create_ingredient_successful(self):
+        """Test create a new ingredient"""
+        payload = {'name': 'Cabbage'}
+        self.client.post(INGREDIENTS_URL, payload)
+
+        # Check that ingredient now exists
+        exists = Ingredient.objects.filter(
+            user=self.user,
+            name=payload['name'],
+        ).exists()
+        self.assertTrue(exists)
+
+    def test_create_ingredient_invalid(self):
+        """Test creating invalid ingredient fails"""
+        # Create a bad payload
+        payload = {'name': ''}
+        res = self.client.post(INGREDIENTS_URL, payload)
+
+        # Assert we get 400 bad request
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 """
     INSTRUCTORS VERSION
