@@ -59,3 +59,14 @@ class ModelTests(TestCase):
 
         # Checking that 'name' field is used as Tag model str representation
         self.assertEqual(str(tag), tag.name)
+
+    def test_ingredient_str(self):
+        """Test the ingredient string representation"""
+        # Create a sample ingredient
+        ingredient = models.Ingredient.objects.create(
+            user=sample_user(),
+            name='Cucumber'
+        )
+
+        # Checking that 'name' field is used as Ingredient model str repr
+        self.assertEqual(str(ingredient), ingredient.name)

@@ -60,3 +60,16 @@ class Tag(models.Model):
     # Set str representation for model
     def __str__(self):
         return self.name
+
+
+class Ingredient(models.Model):
+    """Ingredient to be used in a recipe"""
+    name = models.CharField(max_length=255)
+    # Assign user Foreign Key to our User object using Django settings
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        return self.name

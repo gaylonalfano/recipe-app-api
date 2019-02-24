@@ -7,8 +7,11 @@ from recipe import views
 
 # Create a new router object
 router = DefaultRouter()
-# Register our viewset with our router
+# Register our TagViewSet with our router
 router.register('tags', views.TagViewSet)
+# Register our IngredientViewSet with our router
+router.register('ingredients', views.IngredientViewSet)
+
 
 # Define app_name so reverse() can look up correct urls
 app_name = 'recipe'
