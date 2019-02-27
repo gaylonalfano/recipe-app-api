@@ -46,7 +46,6 @@ class ModelTests(TestCase):
             'test@gmail.com',
             'test12345'
         )
-
         self.assertTrue(user.is_superuser)
         self.assertTrue(user.is_staff)
 
@@ -56,7 +55,6 @@ class ModelTests(TestCase):
             user=sample_user(),
             name="Vegan"
         )
-
         # Checking that 'name' field is used as Tag model str representation
         self.assertEqual(str(tag), tag.name)
 
@@ -67,6 +65,15 @@ class ModelTests(TestCase):
             user=sample_user(),
             name='Cucumber'
         )
-
         # Checking that 'name' field is used as Ingredient model str repr
         self.assertEqual(str(ingredient), ingredient.name)
+
+    def test_recipe_str(self):
+        """Test the recipe string representation"""
+        recipe = models.Recipe.objects.create(
+            user=sample_user(),
+            title='Steak and mushroom sauce',
+            time_minutes=5,
+            price=5.00
+        )
+        self.assertEqual(str(recipe), recipe.title)

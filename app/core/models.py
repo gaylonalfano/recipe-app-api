@@ -73,3 +73,23 @@ class Ingredient(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Recipe(models.Model):
+    """Recipe object"""
+    # user, title, price, time_minutes are required
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    title = models.CharField(max_length=255)
+    price = models.DecimalField(max_digits=5, decimal_places=2)
+    time_minutes = models.IntegerField()
+    # optional fields link
+    link = models.CharField(max_length=255, blank=True)
+    # Create many-to-many for ingredients and tags. Wrap model name in quotes
+    ingredients = models.ManyToManyField('Ingredient')
+    tags = models.ManyToManyField('Tag')
+
+    def __str__(self):
+        return self.title

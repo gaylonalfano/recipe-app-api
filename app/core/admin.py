@@ -39,3 +39,5 @@ admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Tag)
 # Register our Ingredient model
 admin.site.register(models.Ingredient)
+# Register our Recipe model (just created migrations file)
+admin.site.register(models.Recipe)
