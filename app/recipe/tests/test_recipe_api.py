@@ -192,3 +192,55 @@ class PrivateRecipeApiTests(TestCase):
         # Check that sample ingredients match those in ingredients queryset
         self.assertIn(ingredient1, ingredients)
         self.assertIn(ingredient2, ingredients)
+
+    def test_partial_update_recipe(self):
+        """Test updating a recipe with patch"""
+        # Create a sample recipe
+        recipe = sample_recipe(user=self.user)
+        # Add a tag to the recipe
+        recipe.tags.add(sample_tag(user=self.user))
+        # Create a new tag that will replace the original tag
+        new_tag = sample_tag(user=self.user, name='Curry')
+        # Create our payload with the updated values we want to use
+        payload = {'title': 'Chicken Tikka', 'tags': [new_tag.id]}
+        # Update objects using DRF ViewSets by using detail_url
+        url = detail_url(recipe.id)
+        # Make patch request to update our recipe. Don't need 'res' var
+        self.client.patch(url, payload)
+        # Now we've updated the db value we need to refresh_from_db()
+        recipe.refresh_from_db()
+        # Assert that the title has been updated to 'Chicken Tikka'
+        self.assertEqual(recipe.title, payload['title'])
+        # Retrieve tags associated to recipe
+        tags = recipe.tags.all()
+        # Assert that the length of tags is 1. Can use len() or count()
+        self.assertEqual(tags.count(), 1)
+        # Assert that new_tag is in our tags that we retrieved
+        self.assertIn(new_tag, tags)
+
+    def test_full_update_recipe(self):
+        """Test updating a recipe with put"""
+        # Create a sample recipe
+        recipe = sample_recipe(user=self.user)
+        # Add a tag to the recipe. Will exclude later with PUT
+        recipe.tags.add(sample_tag(user=self.user))
+        # Create our payload
+        payload = {
+            'title': 'Spaghetti cabonara',
+            'time_minutes': 25,
+            'price': 5.00
+        }
+        # Create our detail url
+        url = detail_url(recipe.id)
+        # Make the PUT request. Don't need to use 'res' var
+        self.client.put(url, payload)
+        # refresh_from_db now that changes have been made in db
+        recipe.refresh_from_db()
+        # Assert that title, time_minutes and price match payload values
+        self.assertEqual(recipe.title, payload['title'])
+        self.assertEqual(recipe.time_minutes, payload['time_minutes'])
+        self.assertEqual(recipe.price, payload['price'])
+        # Retrieve tags assigned to recipe
+        tags = recipe.tags.all()
+        # Assert that there are zero tags since our PUT didn't have tags
+        self.assertEqual(len(tags), 0)
