@@ -1,4 +1,5 @@
 # app/core/tests/test_models.py
+from unittest.mock import patch
 from django.test import TestCase
 # Import get_user_model() instead of User model directly
 from django.contrib.auth import get_user_model
@@ -77,3 +78,17 @@ class ModelTests(TestCase):
             price=5.00
         )
         self.assertEqual(str(recipe), recipe.title)
+
+    # Add decorator and pass the path of func we will mock 'uuid.uuid4'
+    @patch('uuid.uuid4')
+    def test_recipe_file_name_uuid(self, mock_uuid):
+        """Test that image is saved in the correct location"""
+        # Change value of uuid by adding new variable. Can be anything.
+        uuid = 'test-uuid'
+        # Mock the return value of uuid func by override default behavior
+        mock_uuid.return_value = uuid
+        # Call our new func that returns a file path
+        file_path = models.recipe_image_file_path(None, 'myimage.jpg')
+        # Define the expected file path so we can verify
+        exp_path = f'uploads/recipe/{uuid}.jpg'
+        self.assertEquals(file_path, exp_path)

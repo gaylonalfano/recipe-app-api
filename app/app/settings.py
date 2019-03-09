@@ -125,7 +125,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
+# Anything on 127.0.0.1:8000/static will map to our static dirs
 STATIC_URL = '/static/'
+# Anything on 127.0.0.1:8000/media will map to our media dirs
+MEDIA_URL = '/media/'
+
+# Where to store all the media files. Same dir we created in container build
+MEDIA_ROOT = '/vol/web/media'
+# Where to store all the static files when project is built. collectstatic.
+STATIC_ROOT = '/vol/web/static'
 
 # Assign new custom user model to the model we want inside our core app
 AUTH_USER_MODEL = 'core.User'
