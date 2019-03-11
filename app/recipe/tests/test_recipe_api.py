@@ -1,4 +1,9 @@
 # recipe/tests/test_recipe_api.py
+import tempfile
+import os
+
+from PIL import Image
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -12,6 +17,11 @@ from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 
 
 RECIPES_URLS = reverse('recipe:recipe-list')
+
+
+def image_upload_url(recipe_id):
+    """Return URL for recipe image upload"""
+    return reverse('recipe:recipe-upload-image', args=[recipe_id])
 
 
 def detail_url(recipe_id):
@@ -244,3 +254,55 @@ class PrivateRecipeApiTests(TestCase):
         tags = recipe.tags.all()
         # Assert that there are zero tags since our PUT didn't have tags
         self.assertEqual(len(tags), 0)
+
+
+class RecipeImageUploadTests(TestCase):
+    """Test uploading images to recipes"""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            email='user@londonappdev.com',
+            password='testpass'
+        )
+        # Authenticate our user
+        self.client.force_authenticate(self.user)
+        # Create sample recipe to test uploading images to
+        self.recipe = sample_recipe(user=self.user)
+
+    def tearDown(self):
+        # Clean up all image files created when running our tests
+        self.recipe.image.delete()
+
+    def test_upload_image_to_recipe(self):
+        """Test uploading an image to recipe"""
+        # Create the URL for our sample recipe we created
+        url = image_upload_url(self.recipe.id)
+        # Use context manager to create temp file
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            # Create a 10x10 black image using Image from PIL
+            img = Image.new('RGB', (10, 10))
+            # Save to our NamedTemporaryFile (ntf) in JPEG format
+            img.save(ntf, format='JPEG')
+            # Move cursor/pointer to beginning of file using seek
+            ntf.seek(0)
+            # Make POST request using multipart form request to post data
+            res = self.client.post(url, {'image': ntf}, format='multipart')
+
+        # Refresh the database for our recipe so we can do some assertions
+        self.recipe.refresh_from_db()
+        # Assert that we get a HTTP_200_OK status
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # Check that image is in the response so path to image is accessible
+        self.assertIn('image', res.data)
+        # Check path exists for image on our file system using os.path.exists
+        self.assertTrue(os.path.exists(self.recipe.image.path))
+
+    def test_upload_image_bad_request(self):
+        """Test uploading an invalid image"""
+        # Create our image upload URL
+        url = image_upload_url(self.recipe.id)
+        # Make our POST but send a string object instead of an image file
+        res = self.client.post(url, {'image': 'notimage'}, format='multipart')
+        # Check that we get a 400_BAD_REQUEST as a response
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

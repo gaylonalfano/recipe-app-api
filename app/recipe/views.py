@@ -1,6 +1,10 @@
 # app/recipe/views.py
+# Add custom action to ViewSet with action
+from rest_framework.decorators import action
+# Use Response to return custom responses
+from rest_framework.response import Response
 # See notes Section 12
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
@@ -53,14 +57,42 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return self.queryset.filter(user=self.request.user)
 
     # Override the serializer that is called when making a particular request
-    # Check self.action class var.retrieve' = Detail, 'list' = defaul
+    # Check self.action class var.retrieve' = Detail, 'list' = default
     def get_serializer_class(self):
         """Return appropriate serializer class"""
         if self.action == 'retrieve':
             return serializers.RecipeDetailSerializer
+        # Check if action is upload image and use RecipeImageSerializer
+        elif self.action == 'upload_image':
+            return serializers.RecipeImageSerializer
 
         return self.serializer_class
 
     def perform_create(self, serializer):
         """Create a new recipe"""
         serializer.save(user=self.request.user)
+
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    def upload_image(self, request, pk=None):
+        """Upload an image to a recipe"""
+        # Retrieve the recipe object based on the id in url. Read NOTES!
+        recipe = self.get_object()
+        # Use the get_serializer() to retrieve and pass in our recipe data
+        serializer = self.get_serializer(
+            recipe,
+            data=request.data
+        )
+
+        # Check if serializer is valid. save() Recipe model with updated data
+        if serializer.is_valid():
+            serializer.save()
+            # Return serializer object that was uploaded (recipe id image url)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        # Return default error messages if invalid
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
