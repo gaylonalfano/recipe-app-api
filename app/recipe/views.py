@@ -51,10 +51,32 @@ class RecipeViewSet(viewsets.ModelViewSet):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
 
+    def _params_to_ints(self, querystring):
+        """Convert a list of string IDs to a list of integers"""
+        return [int(str_id) for str_id in querystring.split(',')]
+
     # Override (I think) get_queryset to limit objects to auth user
     def get_queryset(self):
         """Retrieve the recipes for the authenticated user"""
-        return self.queryset.filter(user=self.request.user)
+        # Retrieve GET params provided in request (if any)
+        tags = self.request.query_params.get('tags')
+        ingredients = self.request.query_params.get('ingredients')
+        # Assign queryset instead of self.queryset. Read notes!
+        queryset = self.queryset
+        # Convert string IDs to list of integers (if any)
+        if tags:
+            # Convert string to int values
+            tag_ids = self._params_to_ints(tags)
+            # Filter queryset by using FK id on remote tags table. Read notes!
+            queryset = queryset.filter(tags__id__in=tag_ids)
+        if ingredients:
+            # Convert string to int values
+            ingredient_ids = self._params_to_ints(ingredients)
+            # Filter queryset by using FK id on remote ingredients table
+            queryset = queryset.filter(ingredients__id__in=ingredient_ids)
+
+        # Reference self.queryset, apply filters, return new queryset
+        return queryset.filter(user=self.request.user)
 
     # Override the serializer that is called when making a particular request
     # Check self.action class var.retrieve' = Detail, 'list' = default

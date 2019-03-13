@@ -306,3 +306,61 @@ class RecipeImageUploadTests(TestCase):
         res = self.client.post(url, {'image': 'notimage'}, format='multipart')
         # Check that we get a 400_BAD_REQUEST as a response
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_filter_recipes_by_tags(self):
+        """Test returning recipes with specific tags"""
+        # Create some sample recipes w/ and w/o tags
+        recipe1 = sample_recipe(user=self.user, title='Thai vegetable curry')
+        recipe2 = sample_recipe(user=self.user, title='Aubergine with tahini')
+        recipe3 = sample_recipe(user=self.user, title='Fish and chips')
+
+        # Create sample tags
+        tag1 = sample_tag(user=self.user, name='Vegan')
+        tag2 = sample_tag(user=self.user, name='Vegetarian')
+
+        # Add tags to our first two recipes
+        recipe1.tags.add(tag1)
+        recipe2.tags.add(tag2)
+
+        # Make request for 'Vegan' and 'Vegetarian' recipes in db using tag id
+        res = self.client.get(RECIPES_URLS, {'tags': f'{tag1.id},{tag2.id}'})
+
+        # Serialize our recipes and check they exist in responses returned
+        serializer1 = RecipeSerializer(recipe1)
+        serializer2 = RecipeSerializer(recipe2)
+        serializer3 = RecipeSerializer(recipe3)
+
+        self.assertIn(serializer1.data, res.data)
+        self.assertIn(serializer2.data, res.data)
+        self.assertNotIn(serializer3.data, res.data)
+
+    def test_filter_recipes_by_ingredients(self):
+        """Test returning recipes with specific ingredients"""
+        # Create some sample recipes w/ and w/o ingredients
+        recipe1 = sample_recipe(user=self.user, title='Posh beans on toast')
+        recipe2 = sample_recipe(user=self.user, title='Chicken cacciatore')
+        recipe3 = sample_recipe(user=self.user, title='Steak and mushrooms')
+
+        # Create sample ingredients
+        ingredient1 = sample_ingredient(user=self.user, name='Feta cheese')
+        ingredient2 = sample_ingredient(user=self.user, name='Chicken')
+
+        # Add ingredients to our first two recipes
+        recipe1.ingredients.add(ingredient1)
+        recipe2.ingredients.add(ingredient2)
+
+        # Make our request pass ingredient id inside GET parameters. Notes!
+        res = self.client.get(
+            RECIPES_URLS,
+            {'ingredients': f'{ingredient1.id},{ingredient2.id}'}
+        )
+
+        # Serializer our recipes
+        serializer1 = RecipeSerializer(recipe1)
+        serializer2 = RecipeSerializer(recipe2)
+        serializer3 = RecipeSerializer(recipe3)
+
+        # Check that they exist in responses returned
+        self.assertIn(serializer1.data, res.data)
+        self.assertIn(serializer2.data, res.data)
+        self.assertNotIn(serializer3.data, res.data)
