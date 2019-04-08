@@ -6,7 +6,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Tag
+from core.models import Tag, Recipe
 
 from recipe.serializers import TagSerializer
 
@@ -110,6 +110,61 @@ class PrivateTagsApiTests(TestCase):
         res = self.client.post(TAGS_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_tags_assigned_to_recipes(self):
+        """Test filtering tags by those assigned to recipes"""
+        # Create a couple of sample tags
+        tag1 = Tag.objects.create(user=self.user, name='Breakfast')
+        tag2 = Tag.objects.create(user=self.user, name='Lunch')
+        # Create a sample recipe
+        recipe = Recipe.objects.create(
+            user=self.user,
+            title='Coriander eggs on toast',
+            time_minutes=10,
+            price=5.00
+        )
+        # Add 'breakfast' tag to our recipe
+        recipe.tags.add(tag1)
+
+        # Call our API and pass GET param 'assigned_only'
+        res = self.client.get(TAGS_URL, {'assigned_only': 1})
+
+        # Serialize our tags so we can verify they are returned or not
+        serializer1 = TagSerializer(tag1)
+        serializer2 = TagSerializer(tag2)
+
+        # Assert that tag1 is in the response data (and not tag2)
+        self.assertIn(serializer1.data, res.data)
+        self.assertNotIn(serializer2.data, res.data)
+
+    def test_retrieve_tags_assigned_unique(self):
+        """Test filtering tags by assigned returns unique items"""
+        # Create a single tag that we'll assign to two recipes
+        tag = Tag.objects.create(user=self.user, name='Breakfast')
+        # Create a second tag that won't be assigned to any recipe
+        Tag.objects.create(user=self.user, name='Lunch')
+
+        # Create two recipes and assign 'Breakfast' tag to both
+        recipe1 = Recipe.objects.create(
+            user=self.user,
+            title='Pancakes',
+            time_minutes=5,
+            price=3.00
+        )
+        recipe1.tags.add(tag)
+        recipe2 = Recipe.objects.create(
+            user=self.user,
+            title='Porridge',
+            time_minutes=3,
+            price=2.00
+        )
+        recipe2.tags.add(tag)
+
+        # Call our API and pass GET param 'assigned_only'
+        res = self.client.get(TAGS_URL, {'assigned_only': 1})
+
+        # Assert that only one tag
+        self.assertEqual(len(res.data), 1)
 
 
 """
